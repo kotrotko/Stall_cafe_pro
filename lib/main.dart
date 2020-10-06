@@ -192,7 +192,7 @@ class _MenuPageState extends State<MenuPage> {
     'Taco Bowl',
     'Pico de Gallo',
   ];
-  List<bool> _isFavorite = [false, false, false];
+
   int index;
 
   @override
@@ -227,8 +227,7 @@ class _MenuPageState extends State<MenuPage> {
                 itemBuilder: (context, index) {
                   return ListTile(
                     title: Text(_dishMenu[index]),
-                    //trailing: (_isFavorite)
-                    trailing: _isFavorite[index]
+                    trailing: getOrder().split(', ').contains(_dishMenu[index])
                         ? IconButton(
                             icon: Icon(
                               Icons.favorite,
