@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:stall_cafe_pro/src/prefs_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:material_design_icons_flutter/material_design_icons_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -13,8 +14,8 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       home: HomePage(),
       routes: {
-        _MenuPageState.routeName: (context) => MenuPage(),
-        _OrderPageState.routeName: (context) => OrderPage(),
+        MenuPage.routeName: (context) => MenuPage(),
+        OrderPage.routeName: (context) => OrderPage(),
       },
     );
   }
@@ -60,7 +61,7 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             ListTile(
-              title: Text('MenuPage'),
+              title: Text('Menu Page'),
               onTap: () {
                 Navigator.push(
                   context,
@@ -180,23 +181,23 @@ class _HomePageState extends State<HomePage> {
 }
 
 class MenuPage extends StatefulWidget {
+  static const routeName = 'menuPage';
+
   @override
   _MenuPageState createState() => _MenuPageState();
 }
 
 class _MenuPageState extends State<MenuPage> {
-  static const routeName = '_MenuPageState';
-
   List<String> _dishMenu = [
     'Enchilada Chicken',
     'Taco Bowl',
     'Pico de Gallo',
   ];
-
-  int index;
+  List<String> order = [];
 
   @override
   Widget build(BuildContext context) {
+    getOrder().then((value) => {setState((){order=value;})});
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.green,
@@ -227,36 +228,26 @@ class _MenuPageState extends State<MenuPage> {
                 itemBuilder: (context, index) {
                   return ListTile(
                     title: Text(_dishMenu[index]),
-                    trailing: getOrder().split(', ').contains(_dishMenu[index])
+                    trailing: order.contains(_dishMenu[index])
                         ? IconButton(
                             icon: Icon(
                               Icons.favorite,
                               color: Colors.red,
                             ),
-                            onPressed: () {
-                              List<String> currentOrderEntries = getOrder();
+                            onPressed: () async {
+                              List<String> currentOrderEntries =
+                                  await getOrder();
                               currentOrderEntries.remove(_dishMenu[index]);
-                              /*setState(() {
-                                _isFavorite[index] = !_isFavorite[index];
-                              });*/
+                              saveOrder(currentOrderEntries);
                             },
                           )
                         : IconButton(
                             icon: Icon(Icons.favorite_border),
-                            onPressed: () {
-                              Navigator.pushNamed(
-                                context,
-                                _OrderPageState.routeName,
-                                /*arguments: ScreenArguments(
-                                    Icon(Icons.favorite, color: Colors.blue),
-                                    Text(_dishMenu[index])),*/
-                              );
-                              List<String> currentOrderEntries = getOrder();
+                            onPressed: () async {
+                              List<String> currentOrderEntries =
+                                  await getOrder();
                               currentOrderEntries.add(_dishMenu[index]);
                               saveOrder(currentOrderEntries);
-                              /*setState(() {
-                                _isFavorite[index] = !_isFavorite[index];
-                              });*/
                             }),
                   );
                 })),
@@ -264,36 +255,22 @@ class _MenuPageState extends State<MenuPage> {
     );
   }
 
-  // Save the id of dish as integer
-  saveOrder(currentOrderEntries) async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-    prefs.setString('order', currentOrderEntries.join(', '));
-  }
-
-  //Read the id of dish as integer
-  getOrder() async {
-    SharedPreferences prefs = await SharedPreferences.getInstance();
-
-    List<String> _orderValue = prefs.getString('order').split(', ');
-    print(_orderValue);
-    return _orderValue;
-  }
+  //
 }
 
 class OrderPage extends StatefulWidget {
+  static const routeName = 'orderPage';
+
   @override
   _OrderPageState createState() => _OrderPageState();
 }
 
 class _OrderPageState extends State<OrderPage> {
-  static const routeName = '_OrderPageState';
-  List<String> propMenu = [];
+  List<String> order = [];
 
   @override
   Widget build(BuildContext context) {
-    final ScreenArguments args = ModalRoute.of(context).settings.arguments;
-    int i = 0;
-
+    getOrder().then((value) => {setState(() {order=value;})});
     return Scaffold(
         appBar: AppBar(
           backgroundColor: Colors.green,
@@ -305,9 +282,9 @@ class _OrderPageState extends State<OrderPage> {
           children: <Widget>[
             Expanded(
               child: ListView.builder(
-                  itemCount: 3,
+                  itemCount: order.length,
                   itemBuilder: (context, int i) {
-                    return Text('something');
+                    return Text(order[i]);
                     //return ListTile(title: args.text, trailing: args.icon);
                   }),
             ),
